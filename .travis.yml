@@ -1,20 +1,35 @@
-services: docker
+dist: "trusty"
+sudo: required
+
+matrix:
+  include:
+    - language: python
+      python: 3.5
 
 language: ruby
+addons:
+  apt:
+    packages:
+      - "python3-pip"
+
 rvm:
   - 2.3.3
 cache: bundler
+
+before_script:
+  - bundle install
+  - sudo -H pip3 install --upgrade pip
+  - sudo -H pip3 install --upgrade setuptools
 
 # Assume bundler is being used, therefore
 # the `install` step will run `bundle install` by default.
 script:
   - .ci/build.sh
-  # https://github.com/coala/coala-bears/issues/1037
-  - >
-    if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
-      sed -i.bak '/bears = GitCommitBear/d' .coafile
-    fi
-  - docker run -v=$(pwd):/app --workdir=/app coala/base coala --ci
+  - curl -fsSL -o coala.zip $coala_ZIP_URL/master
+  - pip3 install coala.zip[alldeps] --pre -U
+  - curl -fsSL -o coala-bears.zip $BEARS_ZIP_URL/master
+  - pip3 install coala-bears.zip[alldeps] --pre -U
+  - coala --non-interactive
 
 notifications:
   email: false
@@ -24,6 +39,5 @@ notifications:
 env:
   global:
     - NOKOGIRI_USE_SYSTEM_LIBRARIES=true  # Speeds installation of html-proofer
-
-# Route your build to the container-based infrastructure for a faster build
-sudo: false
+    - coala_ZIP_URL=https://codeload.github.com/coala/coala/zip
+    - BEARS_ZIP_URL=https://codeload.github.com/coala/coala-bears/zip
