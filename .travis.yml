@@ -1,15 +1,11 @@
 dist: "trusty"
 sudo: required
 
-matrix:
-  include:
-    - language: python
-      python: 3.5
-
 language: ruby
 addons:
   apt:
     packages:
+      - "python3.5"
       - "python3-pip"
 
 rvm:
@@ -17,18 +13,19 @@ rvm:
 cache: bundler
 
 before_script:
-  - bundle install
-  - sudo -H pip3 install --upgrade pip
-  - sudo -H pip3 install --upgrade setuptools
+  - sudo -H python3.5 -m pip install --upgrade pip
+  - sudo -H python3.5 -m pip install virtualenv
+  - python3.5 -m virtualenv coala_check
+  - source $TRAVIS_BUILD_DIR/coala_check/bin/activate
+  - curl -fsSL -o coala.zip $coala_ZIP_URL/master
+  - pip install coala.zip[alldeps] --pre -U
+  - curl -fsSL -o coala-bears.zip $BEARS_ZIP_URL/master
+  - pip install coala-bears.zip[alldeps] --pre -U
 
 # Assume bundler is being used, therefore
 # the `install` step will run `bundle install` by default.
 script:
   - .ci/build.sh
-  - curl -fsSL -o coala.zip $coala_ZIP_URL/master
-  - pip3 install coala.zip[alldeps] --pre -U
-  - curl -fsSL -o coala-bears.zip $BEARS_ZIP_URL/master
-  - pip3 install coala-bears.zip[alldeps] --pre -U
   - coala --non-interactive
 
 notifications:
